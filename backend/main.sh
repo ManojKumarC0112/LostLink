@@ -50,7 +50,9 @@ menu_records() {
                 [[ -z "$dt" ]] && dt=$(date "+%Y-%m-%d")
                 read -rp "Your Username: " user
                 read -rp "Contact Email: " email
-                bash "$SCRIPT_DIR/record_manager.sh" add-lost "$title" "$cat" "$desc" "$loc" "$dt" "$user" "$email"
+                read -rp "Contact Phone (e.g. +91-9876543210): " phone
+                [[ -z "$phone" ]] && phone="+91-9876543210"
+                bash "$SCRIPT_DIR/record_manager.sh" add-lost "$title" "$cat" "$desc" "$loc" "$dt" "$user" "$email" "$phone"
                 pause_prompt
                 ;;
             2)
@@ -64,7 +66,9 @@ menu_records() {
                 [[ -z "$dt" ]] && dt=$(date "+%Y-%m-%d")
                 read -rp "Reported By (Username/Security): " user
                 read -rp "Contact Email: " email
-                bash "$SCRIPT_DIR/record_manager.sh" add-found "$title" "$cat" "$desc" "$loc" "$dt" "$user" "$email"
+                read -rp "Contact Phone / Desk Ext (e.g. +91-9876543211): " phone
+                [[ -z "$phone" ]] && phone="+91-9876543211"
+                bash "$SCRIPT_DIR/record_manager.sh" add-found "$title" "$cat" "$desc" "$loc" "$dt" "$user" "$email" "$phone"
                 pause_prompt
                 ;;
             3)
@@ -156,7 +160,9 @@ menu_claims() {
                 read -rp "Found Item ID (e.g. FND003): " fid
                 read -rp "Your Username: " cuser
                 read -rp "Proof of Ownership Details: " proof
-                bash "$SCRIPT_DIR/claim_manager.sh" submit "$fid" "$cuser" "$proof"
+                read -rp "Your Contact Phone (e.g. +91-9876543210): " cphone
+                [[ -z "$cphone" ]] && cphone="+91-9876543210"
+                bash "$SCRIPT_DIR/claim_manager.sh" submit "$fid" "$cuser" "$proof" "$cphone"
                 pause_prompt
                 ;;
             2)

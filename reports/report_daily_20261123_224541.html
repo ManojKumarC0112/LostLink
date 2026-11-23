@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>LostLink Daily Report</title>
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background-color: #f8fafc; color: #1e293b; margin: 0; padding: 30px; }
+    .container { max-width: 900px; margin: 0 auto; background: #ffffff; padding: 40px; border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); border: 1px solid #e2e8f0; }
+    .header { border-bottom: 2px solid #0284c7; padding-bottom: 20px; margin-bottom: 30px; display: flex; justify-content: space-between; align-items: center; }
+    .title { margin: 0; font-size: 26px; color: #0f172a; font-weight: 800; }
+    .meta { color: #64748b; font-size: 14px; margin-top: 6px; }
+    .badge { display: inline-block; padding: 4px 12px; background: #0284c7; color: white; border-radius: 9999px; font-weight: 600; font-size: 12px; text-transform: uppercase; }
+    .grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 30px; }
+    .card { background: #f1f5f9; padding: 18px; border-radius: 8px; border-left: 4px solid #0284c7; }
+    .card-val { font-size: 28px; font-weight: bold; color: #0f172a; margin-top: 4px; }
+    .card-lbl { font-size: 13px; color: #64748b; font-weight: 500; }
+    h2 { font-size: 18px; color: #0f172a; margin-top: 30px; margin-bottom: 12px; border-left: 3px solid #0284c7; padding-left: 8px; }
+    table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 14px; }
+    th { background: #f8fafc; text-align: left; padding: 10px; border-bottom: 2px solid #cbd5e1; color: #475569; }
+    td { padding: 10px; border-bottom: 1px solid #e2e8f0; }
+    .status { padding: 2px 8px; border-radius: 4px; font-size: 12px; font-weight: 600; }
+    .status-lost { background: #fee2e2; color: #991b1b; }
+    .status-found { background: #e0f2fe; color: #0369a1; }
+    .status-recovered { background: #dcfce7; color: #15803d; }
+    .status-pending { background: #fef3c7; color: #b45309; }
+    .footer { margin-top: 40px; padding-top: 20px; border-top: 1px solid #e2e8f0; font-size: 12px; color: #94a3b8; text-align: center; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <div>
+        <h1 class="title">LostLink Campus Report</h1>
+        <div class="meta">Automated Periodic Summary &bull; <strong>Monday, November 23, 2026 10:45 PM</strong></div>
+      </div>
+      <div>
+        <span class="badge">daily</span>
+      </div>
+    </div>
+
+    <div class="grid">
+      <div class="card">
+        <div class="card-lbl">Total Lost Items</div>
+        <div class="card-val">8</div>
+      </div>
+      <div class="card">
+        <div class="card-lbl">Total Found Items</div>
+        <div class="card-val">7</div>
+      </div>
+      <div class="card">
+        <div class="card-lbl">Pending Claims</div>
+        <div class="card-val">2</div>
+      </div>
+      <div class="card" style="border-left-color: #10b981;">
+        <div class="card-lbl">Recovery Rate</div>
+        <div class="card-val" style="color: #10b981;">25.0%</div>
+      </div>
+    </div>
+
+    <h2>Recent Lost Items</h2>
+    <table>
+      <thead>
+        <tr><th>ID</th><th>Title</th><th>Category</th><th>Location</th><th>Status</th></tr>
+      </thead>
+      <tbody>
+        <tr><td><b>LST001</b></td><td>Dell XPS 13 Laptop</td><td>Electronics</td><td>Main Library 2nd Floor</td><td><span class="status status-lost">matched</span></td></tr>
+<tr><td><b>LST002</b></td><td>Blue Leather Wallet</td><td>Personal</td><td>Cafeteria Block B</td><td><span class="status status-lost">recovered</span></td></tr>
+<tr><td><b>LST003</b></td><td>Graphing Calculator TI-84</td><td>Electronics</td><td>Science Block Room 302</td><td><span class="status status-lost">lost</span></td></tr>
+<tr><td><b>LST004</b></td><td>Black Hydro Flask Water Bottle</td><td>Accessories</td><td>Sports Complex Court 1</td><td><span class="status status-lost">lost</span></td></tr>
+<tr><td><b>LST005</b></td><td>Campus ID Card & Keys</td><td>Documents</td><td>Auditorium Hall</td><td><span class="status status-lost">matched</span></td></tr>
+<tr><td><b>LST006</b></td><td>Wireless Sony WH-1000XM4</td><td>Electronics</td><td>Computer Lab 4</td><td><span class="status status-lost">lost</span></td></tr>
+<tr><td><b>LST007</b></td><td>Engineering Mathematics Notebook</td><td>Books</td><td>Mechanical Dept Seminar Hall</td><td><span class="status status-lost">lost</span></td></tr>
+<tr><td><b>LST008</b></td><td>MacBook Air M2 Silver</td><td>Electronics</td><td>Central Campus Library 1st Floor</td><td><span class="status status-lost">lost</span></td></tr>
+      </tbody>
+    </table>
+
+    <h2>Recent Found Items</h2>
+    <table>
+      <thead>
+        <tr><th>ID</th><th>Title</th><th>Category</th><th>Location</th><th>Status</th></tr>
+      </thead>
+      <tbody>
+        <tr><td><b>FND001</b></td><td>Silver Dell Laptop</td><td>Electronics</td><td>Main Library 2nd Floor</td><td><span class="status status-found">claimed</span></td></tr>
+<tr><td><b>FND002</b></td><td>Titan Blue Wallet</td><td>Personal</td><td>Cafeteria Table 7</td><td><span class="status status-found">returned</span></td></tr>
+<tr><td><b>FND003</b></td><td>Black Scientific Calculator</td><td>Electronics</td><td>Science Block Corridor</td><td><span class="status status-found">found</span></td></tr>
+<tr><td><b>FND004</b></td><td>Keys with Campus ID Lanyard</td><td>Documents</td><td>Auditorium Front Row</td><td><span class="status status-found">claimed</span></td></tr>
+<tr><td><b>FND005</b></td><td>Apple AirPods Pro Case</td><td>Electronics</td><td>Student Center Lounge</td><td><span class="status status-found">found</span></td></tr>
+<tr><td><b>FND006</b></td><td>Black Umbrella</td><td>Accessories</td><td>Main Gate Security</td><td><span class="status status-found">found</span></td></tr>
+<tr><td><b>FND007</b></td><td>Silver MacBook Laptop</td><td>Electronics</td><td>Central Campus Library</td><td><span class="status status-found">claimed</span></td></tr>
+      </tbody>
+    </table>
+
+    <div class="footer">
+      Generated automatically by LostLink Unix Shell Core Engine &bull; University Campus Lost & Found System
+    </div>
+  </div>
+</body>
+</html>

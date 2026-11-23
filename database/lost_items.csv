@@ -1,8 +1,10 @@
-item_id,title,category,description,location,date_lost,reported_by,contact_email,status,created_at
-LST001,Dell XPS 13 Laptop,Electronics,Silver Dell XPS 13 with university sticker on cover,Main Library 2nd Floor,2026-11-15,rahul_s,rahul.s@student.campus.edu,matched,2026-11-15 14:00:00
-LST002,Blue Leather Wallet,Personal,Navy blue Titan leather wallet containing Student ID and metro card,Cafeteria Block B,2026-11-16,priya_p,priya.p@student.campus.edu,recovered,2026-11-16 12:30:00
-LST003,Graphing Calculator TI-84,Electronics,Black Texas Instruments calculator in rubber sleeve,Science Block Room 302,2026-11-17,amit_k,amit.k@student.campus.edu,lost,2026-11-17 16:15:00
-LST004,Black Hydro Flask Water Bottle,Accessories,Black insulated bottle with scratches on base,Sports Complex Court 1,2026-11-18,sneha_r,sneha.r@student.campus.edu,lost,2026-11-18 18:00:00
-LST005,Campus ID Card & Keys,Documents,Lanyard with ID card and two brass keys on keychain,Auditorium Hall,2026-11-19,rahul_s,rahul.s@student.campus.edu,matched,2026-11-19 11:20:00
-LST006,Wireless Sony WH-1000XM4,Electronics,Matte black over-ear noise cancelling headphones in case,Computer Lab 4,2026-11-20,priya_p,priya.p@student.campus.edu,lost,2026-11-20 15:45:00
-LST007,Engineering Mathematics Notebook,Books,Spiral-bound blue notebook with Class notes on Differential Calculus,Mechanical Dept Seminar Hall,2026-11-21,amit_k,amit.k@student.campus.edu,lost,2026-11-21 17:10:00
+item_id,title,category,description,location,date_lost,reported_by,contact_email,status,created_at,contact_phone
+LST001,Dell XPS 13 Laptop,Electronics,Silver Dell XPS 13 with university sticker on cover,Main Library 2nd Floor,2026-11-15,rahul_s,rahul.s@student.campus.edu,recovered,2026-11-15 14:00:00,+91-9876543212
+LST002,Blue Leather Wallet,Personal,Navy blue Titan leather wallet containing Student ID and metro card,Cafeteria Block B,2026-11-16,priya_p,priya.p@student.campus.edu,recovered,2026-11-16 12:30:00,+91-9876543213
+LST003,Graphing Calculator TI-84,Electronics,Black Texas Instruments calculator in rubber sleeve,Science Block Room 302,2026-11-17,amit_k,amit.k@student.campus.edu,lost,2026-11-17 16:15:00,+91-9876543214
+LST004,Black Hydro Flask Water Bottle,Accessories,Black insulated bottle with scratches on base,Sports Complex Court 1,2026-11-18,sneha_r,sneha.r@student.campus.edu,lost,2026-11-18 18:00:00,+91-9876543215
+LST005,Campus ID Card & Keys,Documents,Lanyard with ID card and two brass keys on keychain,Auditorium Hall,2026-11-19,rahul_s,rahul.s@student.campus.edu,recovered,2026-11-19 11:20:00,+91-9876543212
+LST006,Wireless Sony WH-1000XM4,Electronics,Matte black over-ear noise cancelling headphones in case,Computer Lab 4,2026-11-20,priya_p,priya.p@student.campus.edu,lost,2026-11-20 15:45:00,+91-9876543213
+LST007,Engineering Mathematics Notebook,Books,Spiral-bound blue notebook with Class notes on Differential Calculus,Mechanical Dept Seminar Hall,2026-11-21,amit_k,amit.k@student.campus.edu,lost,2026-11-21 17:10:00,+91-9876543214
+LST008,MacBook Air M2 Silver,Electronics,Silver Apple laptop with a GitHub sticker on the top cover,Central Campus Library 1st Floor,2026-11-23,student,student@campus.edu,claimed,2026-11-23 22:10:00,+91-9876543212
+LST009,moto edge 50 fusion phone ,Electronics,back cover of anime ,canteen,2026-11-23,rahul_s,rahul_s@campus.edu,recovered,2026-11-23 22:48:54,+91-9876543210

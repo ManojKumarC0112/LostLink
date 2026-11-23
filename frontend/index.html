@@ -36,8 +36,17 @@
 
     // App Component
     function App() {
+      const CAMPUS_USERS = [
+        { username: 'admin', role: 'admin', full_name: 'Campus Admin', email: 'admin@campus.edu', phone: '+91-9876543210' },
+        { username: 'security_desk', role: 'staff', full_name: 'Chief Security Officer', email: 'security@campus.edu', phone: '+91-9876543211' },
+        { username: 'rahul_s', role: 'student', full_name: 'Rahul Sharma', email: 'rahul.s@student.campus.edu', phone: '+91-9876543212' },
+        { username: 'priya_p', role: 'student', full_name: 'Priya Patel', email: 'priya.p@student.campus.edu', phone: '+91-9876543213' },
+        { username: 'amit_k', role: 'student', full_name: 'Amit Kumar', email: 'amit.k@student.campus.edu', phone: '+91-9876543214' },
+        { username: 'sneha_r', role: 'student', full_name: 'Sneha Rao', email: 'sneha.r@student.campus.edu', phone: '+91-9876543215' }
+      ];
+
       const [activeTab, setActiveTab] = useState('dashboard');
-      const [user, setUser] = useState({ username: 'admin', role: 'admin', full_name: 'Campus Admin' });
+      const [user, setUser] = useState(CAMPUS_USERS[0]);
       const [stats, setStats] = useState(null);
       const [lostItems, setLostItems] = useState([]);
       const [foundItems, setFoundItems] = useState([]);
@@ -45,8 +54,10 @@
       const [matches, setMatches] = useState([]);
       const [systemInfo, setSystemInfo] = useState(null);
       const [backups, setBackups] = useState([]);
+      const [reportsList, setReportsList] = useState([]);
       const [logs, setLogs] = useState([]);
       const [loading, setLoading] = useState(false);
+      const [serverConnected, setServerConnected] = useState(true);
       const [notification, setNotification] = useState(null);
 
       // Search filters
@@ -61,9 +72,66 @@
       const [showClaimModal, setShowClaimModal] = useState(null);
 
       // Forms
-      const [newLost, setNewLost] = useState({ title: '', category: 'Electronics', description: '', location: '', date: new Date().toISOString().split('T')[0] });
-      const [newFound, setNewFound] = useState({ title: '', category: 'Electronics', description: '', location: '', date: new Date().toISOString().split('T')[0] });
+      const [newLost, setNewLost] = useState({ 
+        title: '', 
+        category: 'Electronics', 
+        description: '', 
+        location: '', 
+        reported_by: 'admin',
+        email: 'admin@campus.edu',
+        contact_phone: '+91-9876543210', 
+        date: new Date().toISOString().split('T')[0] 
+      });
+
+      const [newFound, setNewFound] = useState({ 
+        title: '', 
+        category: 'Electronics', 
+        description: '', 
+        location: '', 
+        reported_by: 'security_desk',
+        email: 'security@campus.edu',
+        contact_phone: '+91-9876543211', 
+        date: new Date().toISOString().split('T')[0] 
+      });
+
+      const [claimUser, setClaimUser] = useState('admin');
       const [claimProof, setClaimProof] = useState('');
+      const [claimPhone, setClaimPhone] = useState('+91-9876543210');
+
+      const openLostModal = () => {
+        setNewLost({
+          title: '',
+          category: 'Electronics',
+          description: '',
+          location: '',
+          reported_by: user.username,
+          email: user.email || `${user.username}@campus.edu`,
+          contact_phone: user.phone || '+91-9876543210',
+          date: new Date().toISOString().split('T')[0]
+        });
+        setShowLostModal(true);
+      };
+
+      const openFoundModal = () => {
+        setNewFound({
+          title: '',
+          category: 'Electronics',
+          description: '',
+          location: '',
+          reported_by: user.role === 'admin' ? 'security_desk' : user.username,
+          email: user.role === 'admin' ? 'security@campus.edu' : (user.email || `${user.username}@campus.edu`),
+          contact_phone: user.role === 'admin' ? '+91-9876543211' : (user.phone || '+91-9876543210'),
+          date: new Date().toISOString().split('T')[0]
+        });
+        setShowFoundModal(true);
+      };
+
+      const openClaimModal = (item) => {
+        setShowClaimModal(item);
+        setClaimUser(user.username);
+        setClaimPhone(user.phone || '+91-9876543210');
+        setClaimProof('');
+      };
 
       const notify = (msg, type = 'success') => {
         setNotification({ msg, type });
@@ -83,6 +151,7 @@
           if (lRes) setLostItems(lRes);
           if (fRes) setFoundItems(fRes);
           if (cRes) setClaims(cRes);
+          setServerConnected(Boolean(sRes || lRes.length || fRes.length));
         } catch (err) {
           console.error(err);
         }
@@ -110,6 +179,13 @@
         } catch (e) { console.error(e); }
       };
 
+      const fetchReports = async () => {
+        try {
+          const res = await fetch(`${API_BASE}/api/reports`).then(r => r.json());
+          setReportsList(res || []);
+        } catch (e) { console.error(e); }
+      };
+
       const fetchLogs = async () => {
         try {
           const res = await fetch(`${API_BASE}/api/logs?limit=40`).then(r => r.json());
@@ -119,13 +195,12 @@
 
       useEffect(() => {
         fetchDashboardData();
-        fetchMatches();
-        fetchSystem();
       }, []);
 
       useEffect(() => {
         if (activeTab === 'matches') fetchMatches();
         if (activeTab === 'system') fetchSystem();
+        if (activeTab === 'reports') fetchReports();
         if (activeTab === 'backups') fetchBackups();
         if (activeTab === 'logs') fetchLogs();
       }, [activeTab]);
@@ -137,12 +212,16 @@
           const res = await fetch(`${API_BASE}/api/items/lost`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ ...newLost, reported_by: user.username, email: `${user.username}@campus.edu` })
+            body: JSON.stringify({ 
+              ...newLost, 
+              reported_by: newLost.reported_by || user.username, 
+              email: newLost.email || `${user.username}@campus.edu`,
+              contact_phone: newLost.contact_phone || '+91-9876543210'
+            })
           }).then(r => r.json());
           if (res.success) {
-            notify(`Lost item registered! ID: ${res.item_id}`);
+            notify(`Lost item registered! ID: ${res.item_id} (Reported by: ${newLost.reported_by || user.username})`);
             setShowLostModal(false);
-            setNewLost({ title: '', category: 'Electronics', description: '', location: '', date: new Date().toISOString().split('T')[0] });
             fetchDashboardData();
           } else {
             notify(res.message || 'Error adding item', 'error');
@@ -158,12 +237,16 @@
           const res = await fetch(`${API_BASE}/api/items/found`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ ...newFound, reported_by: user.username, email: `${user.username}@campus.edu` })
+            body: JSON.stringify({ 
+              ...newFound, 
+              reported_by: newFound.reported_by || user.username, 
+              email: newFound.email || `${user.username}@campus.edu`,
+              contact_phone: newFound.contact_phone || '+91-9876543211'
+            })
           }).then(r => r.json());
           if (res.success) {
-            notify(`Found item logged! ID: ${res.item_id}`);
+            notify(`Found item logged! ID: ${res.item_id} (Logged by: ${newFound.reported_by || user.username})`);
             setShowFoundModal(false);
-            setNewFound({ title: '', category: 'Electronics', description: '', location: '', date: new Date().toISOString().split('T')[0] });
             fetchDashboardData();
           } else {
             notify(res.message || 'Error adding item', 'error');
@@ -183,12 +266,13 @@
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
               found_item_id: showClaimModal.item_id,
-              claimed_by: user.username,
-              proof_details: claimProof
+              claimed_by: claimUser || user.username,
+              proof_details: claimProof,
+              claimant_phone: claimPhone
             })
           }).then(r => r.json());
           if (res.success) {
-            notify(`Claim submitted! Claim ID: ${res.claim_id}`);
+            notify(`Claim submitted! Claim ID: ${res.claim_id} (Claimed by: ${claimUser || user.username})`);
             setShowClaimModal(null);
             setClaimProof('');
             fetchDashboardData();
@@ -255,6 +339,7 @@
           }).then(r => r.json());
           if (res.success) {
             notify(`${rtype.toUpperCase()} report generated in reports/ folder!`);
+            fetchReports();
           } else {
             notify('Report generation failed', 'error');
           }
@@ -374,24 +459,48 @@
               </div>
 
               {/* User Profile & Actions */}
-              <div className="flex items-center space-x-4">
-                <div className="flex items-center space-x-2 bg-slate-100 p-1 rounded-lg text-xs font-semibold">
-                  <button 
-                    onClick={() => setUser({ username: 'admin', role: 'admin', full_name: 'Campus Admin' })}
-                    className={`px-2.5 py-1 rounded-md transition ${user.role === 'admin' ? 'bg-blue-600 text-white shadow' : 'text-slate-600 hover:text-slate-900'}`}
+              <div className="flex items-center space-x-3">
+                <div className="flex items-center space-x-2 bg-slate-100 p-1.5 rounded-xl text-xs">
+                  <span className="text-slate-500 font-semibold px-1">Active User:</span>
+                  <select
+                    value={user.username}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      if (val === '__custom__') {
+                        const customName = prompt('Enter your student name or username:');
+                        if (customName && customName.trim()) {
+                          const cleanName = customName.trim();
+                          setUser({
+                            username: cleanName.toLowerCase().replace(/\s+/g, '_'),
+                            role: 'student',
+                            full_name: cleanName,
+                            email: `${cleanName.toLowerCase().replace(/\s+/g, '_')}@student.campus.edu`,
+                            phone: '+91-9876543212'
+                          });
+                        }
+                      } else {
+                        const found = CAMPUS_USERS.find(u => u.username === val);
+                        if (found) setUser(found);
+                      }
+                    }}
+                    className="bg-white border border-slate-300 font-semibold text-slate-800 px-2.5 py-1 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer shadow-sm text-xs"
                   >
-                    Admin Mode
-                  </button>
-                  <button 
-                    onClick={() => setUser({ username: 'rahul_s', role: 'student', full_name: 'Rahul Sharma' })}
-                    className={`px-2.5 py-1 rounded-md transition ${user.role === 'student' ? 'bg-blue-600 text-white shadow' : 'text-slate-600 hover:text-slate-900'}`}
-                  >
-                    Student Mode
-                  </button>
+                    <optgroup label="Staff & Admin">
+                      <option value="admin">Campus Admin (Admin)</option>
+                      <option value="security_desk">Security Desk (Staff)</option>
+                    </optgroup>
+                    <optgroup label="Registered Students">
+                      <option value="rahul_s">Rahul Sharma (Student)</option>
+                      <option value="priya_p">Priya Patel (Student)</option>
+                      <option value="amit_k">Amit Kumar (Student)</option>
+                      <option value="sneha_r">Sneha Rao (Student)</option>
+                    </optgroup>
+                    <option value="__custom__">➕ Switch to Custom Name...</option>
+                  </select>
                 </div>
 
-                <div className="flex items-center space-x-3 pl-3 border-l border-slate-200">
-                  <div className="w-8 h-8 rounded-full bg-slate-900 text-white font-bold flex items-center justify-center text-xs">
+                <div className="flex items-center space-x-3 pl-2 border-l border-slate-200">
+                  <div className={`w-8 h-8 rounded-full text-white font-bold flex items-center justify-center text-xs ${user.role === 'admin' ? 'bg-blue-600' : user.role === 'staff' ? 'bg-indigo-600' : 'bg-emerald-600'}`}>
                     {user.username.substring(0, 2).toUpperCase()}
                   </div>
                   <div className="text-left text-xs">
@@ -407,6 +516,24 @@
               {/* TAB 1: DASHBOARD */}
               {activeTab === 'dashboard' && (
                 <div className="space-y-6 max-w-7xl mx-auto">
+                  {!serverConnected && (
+                    <div className="p-4 rounded-xl bg-amber-50 border border-amber-300 text-amber-800 flex items-center justify-between text-xs shadow-sm">
+                      <div className="flex items-center space-x-3">
+                        <span className="text-lg">⚠️</span>
+                        <div>
+                          <p className="font-bold">Waiting for Python API Bridge on http://localhost:5000</p>
+                          <p className="text-[11px] text-amber-700 mt-0.5">Start the server in your terminal: <code className="bg-amber-100 px-1.5 py-0.5 rounded font-mono font-bold">python api/server.py</code></p>
+                        </div>
+                      </div>
+                      <button 
+                        onClick={fetchDashboardData}
+                        className="px-3.5 py-1.5 bg-amber-600 text-white rounded-lg hover:bg-amber-700 font-semibold transition text-xs"
+                      >
+                        Retry Connection
+                      </button>
+                    </div>
+                  )}
+
                   {/* Top Stats Cards */}
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
                     {[
@@ -434,14 +561,14 @@
                     </div>
                     <div className="flex space-x-3">
                       <button 
-                        onClick={() => setShowLostModal(true)}
+                        onClick={openLostModal}
                         className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-xl text-xs font-semibold shadow-sm transition flex items-center space-x-2"
                       >
                         <span>+</span>
                         <span>Report Lost Item</span>
                       </button>
                       <button 
-                        onClick={() => setShowFoundModal(true)}
+                        onClick={openFoundModal}
                         className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-semibold shadow-sm transition flex items-center space-x-2"
                       >
                         <span>+</span>
@@ -477,7 +604,8 @@
                                 <td className="p-2.5">
                                   <span className={`px-2 py-0.5 rounded-full text-[11px] font-semibold ${
                                     item.status === 'lost' ? 'bg-red-100 text-red-700' :
-                                    item.status === 'matched' ? 'bg-amber-100 text-amber-700' : 'bg-emerald-100 text-emerald-700'
+                                    item.status === 'matched' ? 'bg-amber-100 text-amber-700' :
+                                    item.status === 'claimed' ? 'bg-purple-100 text-purple-700' : 'bg-emerald-100 text-emerald-700'
                                   }`}>
                                     {item.status}
                                   </span>
@@ -514,7 +642,7 @@
                                 <td className="p-2.5">
                                   {item.status === 'found' ? (
                                     <button 
-                                      onClick={() => setShowClaimModal(item)}
+                                      onClick={() => openClaimModal(item)}
                                       className="px-2.5 py-1 bg-blue-600 text-white rounded text-[11px] font-semibold hover:bg-blue-700"
                                     >
                                       Claim
@@ -542,7 +670,7 @@
                       <p className="text-xs text-slate-500">Stored in flat-file <code className="font-mono text-blue-600 font-bold">database/lost_items.csv</code></p>
                     </div>
                     <button 
-                      onClick={() => setShowLostModal(true)}
+                      onClick={openLostModal}
                       className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-xl text-xs font-semibold shadow-sm"
                     >
                       + Report New Lost Item
@@ -558,7 +686,7 @@
                           <th className="p-3.5">Category</th>
                           <th className="p-3.5">Location</th>
                           <th className="p-3.5">Date Lost</th>
-                          <th className="p-3.5">Reported By</th>
+                          <th className="p-3.5">Contact Details</th>
                           <th className="p-3.5">Status</th>
                         </tr>
                       </thead>
@@ -573,11 +701,20 @@
                             <td className="p-3.5"><span className="px-2 py-1 rounded bg-slate-100 text-slate-700">{item.category}</span></td>
                             <td className="p-3.5 text-slate-600">{item.location}</td>
                             <td className="p-3.5 font-mono text-slate-500">{item.date_lost}</td>
-                            <td className="p-3.5 text-slate-600">{item.reported_by}</td>
+                            <td className="p-3.5 text-slate-600">
+                              <div className="font-semibold text-slate-800">{item.reported_by}</div>
+                              {item.contact_phone && (
+                                <div className="text-[11px] text-blue-600 font-mono font-medium flex items-center space-x-1 mt-0.5">
+                                  <span>📞</span>
+                                  <span>{item.contact_phone}</span>
+                                </div>
+                              )}
+                            </td>
                             <td className="p-3.5">
                               <span className={`px-2.5 py-1 rounded-full text-[11px] font-semibold ${
                                 item.status === 'lost' ? 'bg-red-100 text-red-700' :
-                                item.status === 'matched' ? 'bg-amber-100 text-amber-700' : 'bg-emerald-100 text-emerald-700'
+                                item.status === 'matched' ? 'bg-amber-100 text-amber-700' :
+                                item.status === 'claimed' ? 'bg-purple-100 text-purple-700' : 'bg-emerald-100 text-emerald-700'
                               }`}>
                                 {item.status}
                               </span>
@@ -599,7 +736,7 @@
                       <p className="text-xs text-slate-500">Stored in flat-file <code className="font-mono text-blue-600 font-bold">database/found_items.csv</code></p>
                     </div>
                     <button 
-                      onClick={() => setShowFoundModal(true)}
+                      onClick={openFoundModal}
                       className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-semibold shadow-sm"
                     >
                       + Log New Found Item
@@ -615,7 +752,7 @@
                           <th className="p-3.5">Category</th>
                           <th className="p-3.5">Location</th>
                           <th className="p-3.5">Date Found</th>
-                          <th className="p-3.5">Reported By</th>
+                          <th className="p-3.5">Contact Details</th>
                           <th className="p-3.5">Status</th>
                           <th className="p-3.5">Action</th>
                         </tr>
@@ -631,7 +768,15 @@
                             <td className="p-3.5"><span className="px-2 py-1 rounded bg-slate-100 text-slate-700">{item.category}</span></td>
                             <td className="p-3.5 text-slate-600">{item.location}</td>
                             <td className="p-3.5 font-mono text-slate-500">{item.date_found}</td>
-                            <td className="p-3.5 text-slate-600">{item.reported_by}</td>
+                            <td className="p-3.5 text-slate-600">
+                              <div className="font-semibold text-slate-800">{item.reported_by}</div>
+                              {item.contact_phone && (
+                                <div className="text-[11px] text-blue-600 font-mono font-medium flex items-center space-x-1 mt-0.5">
+                                  <span>📞</span>
+                                  <span>{item.contact_phone}</span>
+                                </div>
+                              )}
+                            </td>
                             <td className="p-3.5">
                               <span className={`px-2.5 py-1 rounded-full text-[11px] font-semibold ${
                                 item.status === 'found' ? 'bg-blue-100 text-blue-700' :
@@ -643,7 +788,7 @@
                             <td className="p-3.5">
                               {item.status === 'found' ? (
                                 <button 
-                                  onClick={() => setShowClaimModal(item)}
+                                  onClick={() => openClaimModal(item)}
                                   className="px-3 py-1 bg-blue-600 text-white rounded-lg text-xs font-semibold hover:bg-blue-700 transition"
                                 >
                                   Claim Item
@@ -761,7 +906,15 @@
                           <tr key={c.claim_id} className="hover:bg-slate-50">
                             <td className="p-3.5 font-mono font-bold text-slate-700">{c.claim_id}</td>
                             <td className="p-3.5 font-mono font-semibold text-blue-600">{c.found_item_id}</td>
-                            <td className="p-3.5 font-semibold text-slate-800">{c.claimed_by}</td>
+                            <td className="p-3.5">
+                              <div className="font-semibold text-slate-800">{c.claimed_by}</div>
+                              {c.claimant_phone && (
+                                <div className="text-[11px] text-emerald-600 font-mono font-medium flex items-center space-x-1 mt-0.5">
+                                  <span>📞</span>
+                                  <span>{c.claimant_phone}</span>
+                                </div>
+                              )}
+                            </td>
                             <td className="p-3.5 text-slate-600 max-w-xs">{c.proof_details}</td>
                             <td className="p-3.5 font-mono text-slate-500">{c.claim_date}</td>
                             <td className="p-3.5">
@@ -936,28 +1089,92 @@
                   <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-4">
                     <h3 className="text-base font-bold text-slate-900">Automated Report Generator</h3>
                     <p className="text-xs text-slate-500">
-                      Executes <code className="font-mono text-blue-600 font-bold">backend/report_generator.sh</code> to compile reports into <code className="font-mono">reports/</code> in both TXT and HTML format.
+                      Executes <code className="font-mono text-blue-600 font-bold">backend/report_generator.sh</code> to compile periodic analytics into <code className="font-mono">reports/</code> in both TXT and HTML format.
                     </p>
-                    <div className="flex space-x-3 pt-2">
+                    <div className="flex flex-wrap gap-3 pt-2">
                       <button
                         onClick={() => handleGenerateReport('daily')}
-                        className="px-4 py-2 bg-blue-600 text-white rounded-xl text-xs font-semibold hover:bg-blue-700"
+                        className="px-4 py-2 bg-blue-600 text-white rounded-xl text-xs font-semibold hover:bg-blue-700 shadow-sm transition"
                       >
-                        Generate Daily Report
+                        + Generate Daily Report
                       </button>
                       <button
                         onClick={() => handleGenerateReport('weekly')}
-                        className="px-4 py-2 bg-indigo-600 text-white rounded-xl text-xs font-semibold hover:bg-indigo-700"
+                        className="px-4 py-2 bg-indigo-600 text-white rounded-xl text-xs font-semibold hover:bg-indigo-700 shadow-sm transition"
                       >
-                        Generate Weekly Report
+                        + Generate Weekly Report
                       </button>
                       <button
                         onClick={() => handleGenerateReport('monthly')}
-                        className="px-4 py-2 bg-purple-600 text-white rounded-xl text-xs font-semibold hover:bg-purple-700"
+                        className="px-4 py-2 bg-purple-600 text-white rounded-xl text-xs font-semibold hover:bg-purple-700 shadow-sm transition"
                       >
-                        Generate Monthly Report
+                        + Generate Monthly Report
                       </button>
                     </div>
+                  </div>
+
+                  {/* Generated Reports Table */}
+                  <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+                    <div className="p-4 border-b border-slate-200 flex items-center justify-between">
+                      <div>
+                        <h4 className="text-sm font-bold text-slate-900">Generated Reports Archive</h4>
+                        <p className="text-[11px] text-slate-500">Click any report below to open or view it directly in your browser.</p>
+                      </div>
+                      <button 
+                        onClick={fetchReports}
+                        className="text-xs text-blue-600 hover:text-blue-800 font-semibold px-2.5 py-1 rounded-lg hover:bg-blue-50 transition"
+                      >
+                        🔄 Refresh
+                      </button>
+                    </div>
+                    {reportsList.length === 0 ? (
+                      <div className="p-8 text-center text-xs text-slate-500">
+                        No reports generated yet. Click one of the buttons above to generate a report.
+                      </div>
+                    ) : (
+                      <table className="w-full text-left text-xs">
+                        <thead className="bg-slate-50 text-slate-600 border-b border-slate-200 uppercase text-[11px]">
+                          <tr>
+                            <th className="p-3.5">Report Filename</th>
+                            <th className="p-3.5">Format</th>
+                            <th className="p-3.5">File Size</th>
+                            <th className="p-3.5 text-right">Action</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-slate-100 font-mono">
+                          {reportsList.map((r, i) => (
+                            <tr key={i} className="hover:bg-slate-50">
+                              <td className="p-3.5 font-bold text-slate-800">
+                                <span className="mr-2">{r.type === 'html' ? '🌐' : '📄'}</span>
+                                {r.filename}
+                              </td>
+                              <td className="p-3.5">
+                                <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${
+                                  r.type === 'html' ? 'bg-blue-100 text-blue-800' : 'bg-slate-100 text-slate-700'
+                                }`}>
+                                  {r.type.toUpperCase()}
+                                </span>
+                              </td>
+                              <td className="p-3.5 text-slate-600">{r.size}</td>
+                              <td className="p-3.5 text-right">
+                                <a
+                                  href={r.url}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className={`inline-flex items-center space-x-1 px-3 py-1.5 rounded-lg font-sans font-semibold text-xs transition ${
+                                    r.type === 'html' 
+                                      ? 'bg-blue-600 text-white hover:bg-blue-700 shadow-sm' 
+                                      : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+                                  }`}
+                                >
+                                  <span>{r.type === 'html' ? 'Open in Browser ↗' : 'View Text ↗'}</span>
+                                </a>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    )}
                   </div>
                 </div>
               )}
@@ -1144,6 +1361,41 @@
                       className="w-full px-3 py-2 border border-slate-300 rounded-xl text-xs focus:ring-2 focus:ring-blue-500 focus:outline-none"
                     />
                   </div>
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-700 mb-1">Contact Phone Number</label>
+                    <input
+                      type="tel"
+                      required
+                      value={newLost.contact_phone}
+                      onChange={e => setNewLost({ ...newLost, contact_phone: e.target.value })}
+                      placeholder="+91-9876543210"
+                      className="w-full px-3 py-2 border border-slate-300 rounded-xl text-xs focus:ring-2 focus:ring-blue-500 focus:outline-none font-mono"
+                    />
+                  </div>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-xs font-semibold text-slate-700 mb-1">Reported By (User / ID)</label>
+                      <input
+                        type="text"
+                        required
+                        value={newLost.reported_by}
+                        onChange={e => setNewLost({ ...newLost, reported_by: e.target.value })}
+                        placeholder="e.g. rahul_s"
+                        className="w-full px-3 py-2 border border-slate-300 rounded-xl text-xs focus:ring-2 focus:ring-blue-500 focus:outline-none font-mono"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-semibold text-slate-700 mb-1">Contact Email</label>
+                      <input
+                        type="email"
+                        required
+                        value={newLost.email}
+                        onChange={e => setNewLost({ ...newLost, email: e.target.value })}
+                        placeholder="student@campus.edu"
+                        className="w-full px-3 py-2 border border-slate-300 rounded-xl text-xs focus:ring-2 focus:ring-blue-500 focus:outline-none font-mono"
+                      />
+                    </div>
+                  </div>
                   <div className="flex justify-end space-x-2 pt-2">
                     <button
                       type="button"
@@ -1218,6 +1470,41 @@
                       className="w-full px-3 py-2 border border-slate-300 rounded-xl text-xs focus:ring-2 focus:ring-blue-500 focus:outline-none"
                     />
                   </div>
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-700 mb-1">Contact Phone / Desk Ext</label>
+                    <input
+                      type="tel"
+                      required
+                      value={newFound.contact_phone}
+                      onChange={e => setNewFound({ ...newFound, contact_phone: e.target.value })}
+                      placeholder="+91-9876543211"
+                      className="w-full px-3 py-2 border border-slate-300 rounded-xl text-xs focus:ring-2 focus:ring-blue-500 focus:outline-none font-mono"
+                    />
+                  </div>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-xs font-semibold text-slate-700 mb-1">Logged By (User / Staff)</label>
+                      <input
+                        type="text"
+                        required
+                        value={newFound.reported_by}
+                        onChange={e => setNewFound({ ...newFound, reported_by: e.target.value })}
+                        placeholder="e.g. security_desk"
+                        className="w-full px-3 py-2 border border-slate-300 rounded-xl text-xs focus:ring-2 focus:ring-blue-500 focus:outline-none font-mono"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-semibold text-slate-700 mb-1">Contact Email</label>
+                      <input
+                        type="email"
+                        required
+                        value={newFound.email}
+                        onChange={e => setNewFound({ ...newFound, email: e.target.value })}
+                        placeholder="security@campus.edu"
+                        className="w-full px-3 py-2 border border-slate-300 rounded-xl text-xs focus:ring-2 focus:ring-blue-500 focus:outline-none font-mono"
+                      />
+                    </div>
+                  </div>
                   <div className="flex justify-end space-x-2 pt-2">
                     <button
                       type="button"
@@ -1245,6 +1532,30 @@
                 <h3 className="text-base font-bold text-slate-900 mb-1">Claim Item: {showClaimModal.title}</h3>
                 <p className="text-xs text-slate-500 mb-4">Item ID: <code className="font-mono">{showClaimModal.item_id}</code></p>
                 <form onSubmit={handleSubmitClaim} className="space-y-4">
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-xs font-semibold text-slate-700 mb-1">Claimant Name / ID</label>
+                      <input
+                        type="text"
+                        required
+                        value={claimUser}
+                        onChange={e => setClaimUser(e.target.value)}
+                        placeholder="e.g. rahul_s"
+                        className="w-full px-3 py-2 border border-slate-300 rounded-xl text-xs focus:ring-2 focus:ring-blue-500 focus:outline-none font-mono"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-semibold text-slate-700 mb-1">Your Phone Number</label>
+                      <input
+                        type="tel"
+                        required
+                        value={claimPhone}
+                        onChange={e => setClaimPhone(e.target.value)}
+                        placeholder="+91-9876543210"
+                        className="w-full px-3 py-2 border border-slate-300 rounded-xl text-xs focus:ring-2 focus:ring-blue-500 focus:outline-none font-mono"
+                      />
+                    </div>
+                  </div>
                   <div>
                     <label className="block text-xs font-semibold text-slate-700 mb-1">Proof of Ownership</label>
                     <textarea

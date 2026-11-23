@@ -11,13 +11,19 @@ import json
 import shutil
 import subprocess
 from pathlib import Path
+from socketserver import ThreadingMixIn
 from http.server import HTTPServer, SimpleHTTPRequestHandler
 from urllib.parse import parse_qs, urlparse
+
+class ThreadedHTTPServer(ThreadingMixIn, HTTPServer):
+    daemon_threads = True
+    allow_reuse_address = True
 
 # Directories
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 BACKEND_DIR = PROJECT_ROOT / "backend"
 FRONTEND_DIR = PROJECT_ROOT / "frontend"
+REPORTS_DIR = PROJECT_ROOT / "reports"
 PORT = 5000
 
 # Locate Bash Executable across Windows (Git Bash / WSL) and Linux/macOS
@@ -77,7 +83,13 @@ class LostLinkAPIHandler(SimpleHTTPRequestHandler):
         if content_length > 0:
             body_bytes = self.rfile.read(content_length)
             try:
-                return json.loads(body_bytes.decode("utf-8"))
+                data = json.loads(body_bytes.decode("utf-8"))
+                if isinstance(data, dict):
+                    return {
+                        k: (v.replace("\r", "").replace("\n", " ") if isinstance(v, str) else v)
+                        for k, v in data.items()
+                    }
+                return data
             except Exception:
                 return {}
         return {}
@@ -154,6 +166,36 @@ class LostLinkAPIHandler(SimpleHTTPRequestHandler):
             self.wfile.write((out if out else "[]").encode("utf-8"))
             return
 
+        elif path == "/api/reports":
+            reports = []
+            if REPORTS_DIR.exists():
+                for p in sorted(REPORTS_DIR.glob("report_*"), key=lambda x: x.stat().st_mtime, reverse=True):
+                    if p.is_file():
+                        reports.append({
+                            "filename": p.name,
+                            "type": "html" if p.suffix == ".html" else "txt",
+                            "size": f"{p.stat().st_size / 1024:.1f} KB",
+                            "mtime": p.stat().st_mtime,
+                            "url": f"/reports/{p.name}"
+                        })
+            self._set_headers(200)
+            self.wfile.write(json.dumps(reports).encode("utf-8"))
+            return
+
+        # Direct serving of generated reports (HTML / TXT)
+        elif path.startswith("/reports/"):
+            rel_file = path[len("/reports/"):]
+            target = (REPORTS_DIR / rel_file).resolve()
+            if target.is_file() and str(target).startswith(str(REPORTS_DIR.resolve())):
+                content_type = "text/html; charset=utf-8" if target.suffix == ".html" else "text/plain; charset=utf-8"
+                self._set_headers(200, content_type=content_type)
+                with open(target, "rb") as f:
+                    self.wfile.write(f.read())
+                return
+            self._set_headers(404, content_type="text/plain; charset=utf-8")
+            self.wfile.write(b"Report not found")
+            return
+
         # Serve Frontend Static Assets
         return super().do_GET()
 
@@ -194,6 +236,7 @@ class LostLinkAPIHandler(SimpleHTTPRequestHandler):
                 body.get("date", ""),
                 body.get("reported_by", "student"),
                 body.get("email", ""),
+                body.get("contact_phone", body.get("phone", "+91-9876543210")),
                 "--json"
             )
             self._set_headers(200 if code == 0 else 400)
@@ -210,6 +253,7 @@ class LostLinkAPIHandler(SimpleHTTPRequestHandler):
                 body.get("date", ""),
                 body.get("reported_by", "security_desk"),
                 body.get("email", ""),
+                body.get("contact_phone", body.get("phone", "+91-9876543211")),
                 "--json"
             )
             self._set_headers(200 if code == 0 else 400)
@@ -222,6 +266,7 @@ class LostLinkAPIHandler(SimpleHTTPRequestHandler):
                 body.get("found_item_id", ""),
                 body.get("claimed_by", "student"),
                 body.get("proof_details", ""),
+                body.get("claimant_phone", body.get("phone", "+91-9876543210")),
                 "--json"
             )
             self._set_headers(200 if code == 0 else 400)
@@ -271,7 +316,7 @@ class LostLinkAPIHandler(SimpleHTTPRequestHandler):
 
 def run_server():
     server_address = ("", PORT)
-    httpd = HTTPServer(server_address, LostLinkAPIHandler)
+    httpd = ThreadedHTTPServer(server_address, LostLinkAPIHandler)
     print("=" * 70)
     print("  LostLink - Unix & Shell Scripting Powered Campus Lost & Found System")
     print(f"  Backend Engine : GNU Bash ({BASH_EXEC})")

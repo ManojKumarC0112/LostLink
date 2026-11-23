@@ -15,7 +15,8 @@ submit_claim() {
     local found_item_id="$1"
     local claimed_by="$2"
     local proof_details="$3"
-    local output_json="${4:-false}"
+    local claimant_phone="${4:-+91-9876543210}"
+    local output_json="${5:-false}"
 
     # Verify found item exists
     if ! grep -q "^$found_item_id," "$FOUND_CSV"; then
@@ -48,20 +49,39 @@ submit_claim() {
     local review_notes="Awaiting admin/security review"
     local updated_at="$claim_date"
 
-    # Sanitize commas
+    # Sanitize commas, carriage returns, and newlines
+    proof_details="${proof_details//$'\r'/}"
+    proof_details="${proof_details//$'\n'/ }"
     proof_details="${proof_details//,/;}"
+    claimant_phone="${claimant_phone//$'\r'/}"
+    claimant_phone="${claimant_phone//,/;}"
 
-    echo "$claim_id,$found_item_id,$claimed_by,$proof_details,$claim_date,$status,$reviewed_by,$review_notes,$updated_at" >> "$CLAIMS_CSV"
+    echo "$claim_id,$found_item_id,$claimed_by,$proof_details,$claim_date,$status,$reviewed_by,$review_notes,$updated_at,$claimant_phone" >> "$CLAIMS_CSV"
     
     # Update found item status to claimed
     local temp_file
     temp_file=$(mktemp)
     awk -F',' -v id="$found_item_id" 'BEGIN{OFS=","} {if ($1 == id && $9 == "found") $9 = "claimed"; print $0}' "$FOUND_CSV" > "$temp_file" && mv "$temp_file" "$FOUND_CSV"
 
-    log_audit "CLAIMS" "$claimed_by" "Submitted claim $claim_id for found item $found_item_id"
+    # Update claimant matching lost item status to claimed
+    local found_cat
+    found_cat=$(grep "^$found_item_id," "$FOUND_CSV" | cut -d',' -f3)
+    local temp_lost
+    temp_lost=$(mktemp)
+    awk -F',' -v user="$claimed_by" -v fcat="$found_cat" '
+    BEGIN { OFS="," }
+    {
+        if (($7 == user || user == "admin") && ($9 == "lost" || $9 == "matched") && (fcat == "" || tolower($3) == tolower(fcat))) {
+            $9 = "claimed"
+        }
+        print $0
+    }
+    ' "$LOST_CSV" > "$temp_lost" && mv "$temp_lost" "$LOST_CSV"
+
+    log_audit "CLAIMS" "$claimed_by" "Submitted claim $claim_id for found item $found_item_id (Phone: $claimant_phone)"
 
     if [[ "$output_json" == "--json" ]]; then
-        echo "{\"success\": true, \"claim_id\": \"$claim_id\", \"found_item_id\": \"$found_item_id\", \"status\": \"$status\"}"
+        echo "{\"success\": true, \"claim_id\": \"$claim_id\", \"found_item_id\": \"$found_item_id\", \"status\": \"$status\", \"phone\": \"$claimant_phone\"}"
     else
         print_success "Claim $claim_id submitted successfully for found item $found_item_id."
     fi
@@ -161,12 +181,41 @@ review_claim() {
         temp_found=$(mktemp)
         awk -F',' -v fid="$target_found_id" 'BEGIN{OFS=","} {if ($1 == fid) $9 = "returned"; print $0}' "$FOUND_CSV" > "$temp_found" && mv "$temp_found" "$FOUND_CSV"
 
-        # Also search if any lost item owned by the claimer was matched, update to recovered
-        local claimer
+        # Update claimant lost item to "recovered"
+        local claimer found_cat
         claimer=$(grep "^$claim_id," "$CLAIMS_CSV" | cut -d',' -f3)
+        found_cat=$(grep "^$target_found_id," "$FOUND_CSV" | cut -d',' -f3)
         local temp_lost
         temp_lost=$(mktemp)
-        awk -F',' -v user="$claimer" 'BEGIN{OFS=","} {if ($7 == user && $9 == "matched") $9 = "recovered"; print $0}' "$LOST_CSV" > "$temp_lost" && mv "$temp_lost" "$LOST_CSV"
+        awk -F',' -v user="$claimer" -v fcat="$found_cat" '
+        BEGIN { OFS="," }
+        {
+            if (($7 == user || user == "admin") && ($9 == "claimed" || $9 == "matched" || $9 == "lost") && (fcat == "" || tolower($3) == tolower(fcat))) {
+                $9 = "recovered"
+            }
+            print $0
+        }
+        ' "$LOST_CSV" > "$temp_lost" && mv "$temp_lost" "$LOST_CSV"
+
+    elif [[ "$new_status" == "rejected" && -n "$target_found_id" ]]; then
+        local temp_found
+        temp_found=$(mktemp)
+        awk -F',' -v fid="$target_found_id" 'BEGIN{OFS=","} {if ($1 == fid) $9 = "found"; print $0}' "$FOUND_CSV" > "$temp_found" && mv "$temp_found" "$FOUND_CSV"
+
+        local claimer found_cat
+        claimer=$(grep "^$claim_id," "$CLAIMS_CSV" | cut -d',' -f3)
+        found_cat=$(grep "^$target_found_id," "$FOUND_CSV" | cut -d',' -f3)
+        local temp_lost
+        temp_lost=$(mktemp)
+        awk -F',' -v user="$claimer" -v fcat="$found_cat" '
+        BEGIN { OFS="," }
+        {
+            if (($7 == user || user == "admin") && ($9 == "claimed" || $9 == "matched") && (fcat == "" || tolower($3) == tolower(fcat))) {
+                $9 = "lost"
+            }
+            print $0
+        }
+        ' "$LOST_CSV" > "$temp_lost" && mv "$temp_lost" "$LOST_CSV"
     fi
 
     log_audit "CLAIMS" "$reviewer" "Reviewed claim $claim_id: $new_status (Notes: $notes)"
@@ -183,7 +232,7 @@ review_claim() {
 # ------------------------------------------------------------------------------
 case "${1:-}" in
     submit)
-        submit_claim "$2" "$3" "$4" "${5:-}"
+        submit_claim "$2" "$3" "$4" "${5:-+91-9876543210}" "${6:-}"
         ;;
     list)
         list_claims "${2:-all}" "${3:-}"

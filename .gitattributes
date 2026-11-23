@@ -1,0 +1,6 @@
+# Ensure Bash shell scripts and CSV database files keep Unix LF line endings across all platforms
+*.sh text eol=lf
+*.csv text eol=lf
+*.py text eol=lf
+*.html text eol=lf
+*.idx text eol=lf

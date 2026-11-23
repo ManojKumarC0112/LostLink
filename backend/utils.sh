@@ -96,6 +96,25 @@ get_next_id() {
     fi
 }
 
+# Utility: Validation Helpers using Bash Regex
+validate_phone() {
+    local phone="$1"
+    if [[ "$phone" =~ ^\+?[0-9\ -]{7,15}$ ]]; then
+        return 0
+    else
+        return 1
+    fi
+}
+
+validate_email() {
+    local email="$1"
+    if [[ "$email" =~ ^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$ ]]; then
+        return 0
+    else
+        return 1
+    fi
+}
+
 # Utility: JSON Escaping
 escape_json_val() {
     local s="$1"

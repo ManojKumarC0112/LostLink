@@ -1,7 +1,7 @@
-user_id,username,password_hash,full_name,email,role,created_at
-USR001,admin,admin123,Campus Admin,admin@campus.edu,admin,2026-11-01 09:00:00
-USR002,security_desk,secpass,Chief Security Officer,security@campus.edu,staff,2026-11-01 09:15:00
-USR003,rahul_s,pass123,Rahul Sharma,rahul.s@student.campus.edu,student,2026-11-05 11:30:00
-USR004,priya_p,pass456,Priya Patel,priya.p@student.campus.edu,student,2026-11-07 14:20:00
-USR005,amit_k,pass789,Amit Kumar,amit.k@student.campus.edu,student,2026-11-10 16:45:00
-USR006,sneha_r,pass321,Sneha Rao,sneha.r@student.campus.edu,student,2026-11-12 10:10:00
+user_id,username,password_hash,full_name,email,role,created_at,phone_number
+USR001,admin,admin123,Campus Admin,admin@campus.edu,admin,2026-11-01 09:00:00,+91-9876543210
+USR002,security_desk,secpass,Chief Security Officer,security@campus.edu,staff,2026-11-01 09:15:00,+91-9876543211
+USR003,rahul_s,pass123,Rahul Sharma,rahul.s@student.campus.edu,student,2026-11-05 11:30:00,+91-9876543212
+USR004,priya_p,pass456,Priya Patel,priya.p@student.campus.edu,student,2026-11-07 14:20:00,+91-9876543213
+USR005,amit_k,pass789,Amit Kumar,amit.k@student.campus.edu,student,2026-11-10 16:45:00,+91-9876543214
+USR006,sneha_r,pass321,Sneha Rao,sneha.r@student.campus.edu,student,2026-11-12 10:10:00,+91-9876543215

@@ -108,7 +108,8 @@ add_lost_item() {
     local date_lost="$5"
     local reported_by="$6"
     local contact_email="$7"
-    local output_json="${8:-false}"
+    local contact_phone="${8:-+91-9876543210}"
+    local output_json="${9:-false}"
 
     local item_id
     item_id=$(get_next_id "$LOST_CSV" "LST")
@@ -116,18 +117,19 @@ add_lost_item() {
     local created_at
     created_at=$(date "+%Y-%m-%d %H:%M:%S")
 
-    # Sanitize commas in text fields
-    title="${title//,/;}"
-    description="${description//,/;}"
-    location="${location//,/;}"
+    # Sanitize commas, carriage returns, and newlines in text fields
+    title="${title//$'\r'/}"; title="${title//$'\n'/ }"; title="${title//,/;}"
+    description="${description//$'\r'/}"; description="${description//$'\n'/ }"; description="${description//,/;}"
+    location="${location//$'\r'/}"; location="${location//$'\n'/ }"; location="${location//,/;}"
+    contact_phone="${contact_phone//$'\r'/}"; contact_phone="${contact_phone//,/;}"
 
-    echo "$item_id,$title,$category,$description,$location,$date_lost,$reported_by,$contact_email,$status,$created_at" >> "$LOST_CSV"
-    log_audit "RECORD_MGR" "$reported_by" "Reported lost item: $title (ID: $item_id)"
+    echo "$item_id,$title,$category,$description,$location,$date_lost,$reported_by,$contact_email,$status,$created_at,$contact_phone" >> "$LOST_CSV"
+    log_audit "RECORD_MGR" "$reported_by" "Reported lost item: $title (ID: $item_id, Phone: $contact_phone)"
 
     if [[ "$output_json" == "--json" ]]; then
-        echo "{\"success\": true, \"item_id\": \"$item_id\", \"title\": \"$title\", \"status\": \"$status\"}"
+        echo "{\"success\": true, \"item_id\": \"$item_id\", \"title\": \"$title\", \"status\": \"$status\", \"phone\": \"$contact_phone\"}"
     else
-        print_success "Lost item registered successfully! Item ID: $item_id"
+        print_success "Lost item registered successfully! Item ID: $item_id (Phone: $contact_phone)"
     fi
 }
 
@@ -139,7 +141,8 @@ add_found_item() {
     local date_found="$5"
     local reported_by="$6"
     local contact_email="$7"
-    local output_json="${8:-false}"
+    local contact_phone="${8:-+91-9876543211}"
+    local output_json="${9:-false}"
 
     local item_id
     item_id=$(get_next_id "$FOUND_CSV" "FND")
@@ -147,18 +150,19 @@ add_found_item() {
     local created_at
     created_at=$(date "+%Y-%m-%d %H:%M:%S")
 
-    # Sanitize commas in text fields
-    title="${title//,/;}"
-    description="${description//,/;}"
-    location="${location//,/;}"
+    # Sanitize commas, carriage returns, and newlines in text fields
+    title="${title//$'\r'/}"; title="${title//$'\n'/ }"; title="${title//,/;}"
+    description="${description//$'\r'/}"; description="${description//$'\n'/ }"; description="${description//,/;}"
+    location="${location//$'\r'/}"; location="${location//$'\n'/ }"; location="${location//,/;}"
+    contact_phone="${contact_phone//$'\r'/}"; contact_phone="${contact_phone//,/;}"
 
-    echo "$item_id,$title,$category,$description,$location,$date_found,$reported_by,$contact_email,$status,$created_at" >> "$FOUND_CSV"
-    log_audit "RECORD_MGR" "$reported_by" "Logged found item: $title (ID: $item_id)"
+    echo "$item_id,$title,$category,$description,$location,$date_found,$reported_by,$contact_email,$status,$created_at,$contact_phone" >> "$FOUND_CSV"
+    log_audit "RECORD_MGR" "$reported_by" "Logged found item: $title (ID: $item_id, Phone: $contact_phone)"
 
     if [[ "$output_json" == "--json" ]]; then
-        echo "{\"success\": true, \"item_id\": \"$item_id\", \"title\": \"$title\", \"status\": \"$status\"}"
+        echo "{\"success\": true, \"item_id\": \"$item_id\", \"title\": \"$title\", \"status\": \"$status\", \"phone\": \"$contact_phone\"}"
     else
-        print_success "Found item logged successfully! Item ID: $item_id"
+        print_success "Found item logged successfully! Item ID: $item_id (Phone: $contact_phone)"
     fi
 }
 
@@ -290,10 +294,10 @@ case "${1:-}" in
         register_user "$2" "$3" "$4" "$5" "${6:-student}" "${7:-}"
         ;;
     add-lost)
-        add_lost_item "$2" "$3" "$4" "$5" "$6" "$7" "$8" "${9:-}"
+        add_lost_item "$2" "$3" "$4" "$5" "$6" "$7" "$8" "${9:-+91-9876543210}" "${10:-}"
         ;;
     add-found)
-        add_found_item "$2" "$3" "$4" "$5" "$6" "$7" "$8" "${9:-}"
+        add_found_item "$2" "$3" "$4" "$5" "$6" "$7" "$8" "${9:-+91-9876543211}" "${10:-}"
         ;;
     list)
         list_items "$2" "${3:-all}" "${4:-}"
