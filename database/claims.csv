@@ -1,0 +1,5 @@
+claim_id,found_item_id,claimed_by,proof_details,claim_date,status,reviewed_by,review_notes,updated_at
+CLM001,FND001,rahul_s,Serial number matches Dell invoice #84920 and lockscreen wallpaper is my photo,2026-11-15 16:00:00,approved,admin,Verified invoice and serial number successfully. Handed over to student.,2026-11-15 17:30:00
+CLM002,FND002,priya_p,Student ID inside belongs to Priya Patel with registration number 2024CS042,2026-11-16 13:45:00,approved,admin,Identity verified with government ID card. Handed over.,2026-11-16 14:15:00
+CLM003,FND004,rahul_s,ID card shows my name and keys unlock locker #14 in hostel block 3,2026-11-19 13:00:00,pending,admin,Pending verification at security desk.,2026-11-19 13:05:00
+CLM004,FND003,amit_k,I think this is my calculator lost in Science block,2026-11-18 10:00:00,rejected,admin,Lost item was TI-84 whereas found item is Casio. Model mismatch.,2026-11-18 11:20:00

@@ -1,0 +1,7 @@
+item_id,title,category,description,location,date_found,reported_by,contact_email,status,created_at
+FND001,Silver Dell Laptop,Electronics,Dell laptop found on study desk near window,Main Library 2nd Floor,2026-11-15,security_desk,security@campus.edu,claimed,2026-11-15 15:30:00
+FND002,Titan Blue Wallet,Personal,Leather wallet with student ID cards and cash,Cafeteria Table 7,2026-11-16,security_desk,security@campus.edu,returned,2026-11-16 13:00:00
+FND003,Black Scientific Calculator,Electronics,Casio scientific calculator found under bench,Science Block Corridor,2026-11-18,security_desk,security@campus.edu,found,2026-11-18 09:00:00
+FND004,Keys with Campus ID Lanyard,Documents,Blue campus lanyard with student card and 2 keys,Auditorium Front Row,2026-11-19,security_desk,security@campus.edu,claimed,2026-11-19 12:45:00
+FND005,Apple AirPods Pro Case,Electronics,White charging case with minor dent on lid,Student Center Lounge,2026-11-20,security_desk,security@campus.edu,found,2026-11-20 10:15:00
+FND006,Black Umbrella,Accessories,Automatic compact black umbrella with wooden curved handle,Main Gate Security,2026-11-21,security_desk,security@campus.edu,found,2026-11-21 08:30:00
